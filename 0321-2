@@ -1,0 +1,76 @@
+#include<iostream>
+#include<vector>
+
+class Screen {
+public:
+	typedef std::string::size_type pos;     //定义类型的成员须得先定义后使用。因此，类型成员通常出现再类开始的地方。
+	//等价于：using pos=std::string::size_type;
+	Screen() = default;                     //假如你已经提供了一个构造函数，则编译器不会再自动生成默认的构造函数
+	                                        //如果我们的类需要默认构造函数，则必须显示的将他们声明出来
+	Screen(pos h, pos w, char con) :height(h), width(w), contents(h* w, con) {}
+	char get()const                         //读取光标处字符
+	{
+		return contents[cursor];
+	}                                       //隐式内联
+	char get(pos ht, pos wd)const;   //显示内联、、成员函数重载
+	Screen& move(pos r, pos c);             //能够在之后被设为内联
+	Screen& set(char);
+	Screen& set(pos, pos, char);
+private: 
+	pos cursor = 0;
+	pos height = 0, width = 0;
+	std::string contents;
+};
+
+inline Screen& Screen::move(pos r, pos c)   //可以在函数的定义处和声明处指定inline，也可以同时说明，但没必要。
+{                                           //我们最好只在类外部函数定义的地方说明inline，可以使类更容易理解。
+	pos row = r * width;                    //计算行的位置
+	cursor = row + c;                       //在行内将光标移动到指定位置
+	return *this;                           //以左值的形式返回对象
+}
+
+inline char Screen::get(pos ht, pos wd)const
+{
+	pos row = ht * width;                   //计算行的位置
+	return contents[row + wd];              //返回给定列的字符
+}
+/*详述内联函数
+* 对于内联函数，编译器在编译时会把内联函数的实现替换到每个调用内联函数的地方。
+* 可以与宏函数作为类比，但宏函数不会进行类型检查。
+* 适当使用内联函数会提高程序的执行效率。
+* 内联函数需要简短、没有复杂的实现，如whle,for循环，递归等、通常在多处有调用。
+* 
+* 为什么要引入内联函数？
+* 引入内联函数主要是解决一些频繁调用的小函数消耗大量空间的问题。
+* 在通常情况下，再调用函数的时候，程序将控制权从调用程序处转移到被调用函数处，
+* 在这个过程中，传递参数、寄存器、返回值等会消耗额外时间和内存，
+* 如果调用函数的代码量很少，也许转移到调用函数的时间比函数执行时间还长。
+* 而如果使用内联函数，内联函数将会在调用出把代码展开，从而节省了调用函数的开销。
+* 
+* 包含递归、复杂实现、静态变量的函数不能是内联函数。
+* 
+* 缺点：
+* 如果使用内联函数过多，生成的二进制文件会变大。
+* 编译时间会增加，每次内联函数有修改，就需要重新编译代码。
+*/
+
+class Window_mgr {                                    //该类包含一个Screen类型的vector,每个元素表示一个特定的Screen
+private:
+	std::vector<Screen> screens{ Screen(24,80,' ')};
+};
+inline Screen& Screen::set(char ix)                  //set的返回值是调用set的对象的引用。返回引用的函数的是左值的
+{ 
+	contents[cursor] = ix;
+	return *this;
+}
+inline Screen& Screen::set(pos r, pos d, char ch)
+{
+	contents[r * width + d] = ch;  //设置给定位置新值
+	return *this;                  //将this对象作为左值返回
+}
+int main()
+{
+	Screen myScreen;
+	myScreen.move(4, 0).set('#');  //一组动作序列
+
+}
