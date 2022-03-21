@@ -1,0 +1,101 @@
+#include<iostream>
+#include<vector>
+
+using namespace std;
+
+class Sales_data     //struct与class两者的默认访问权限不一样。类可以在它的第一个访问说明符之前定义成员，对这种成员的访问权限仅依赖于类的定义方式。
+{                    //对于struct第一个访问说明符之前的成员是public;相反，class中为private；
+
+	friend Sales_data add(const Sales_data&, const Sales_data&);   //类可以允许其他类或函数访问它的非公有成员，方法是令他们成为该类的友元
+	friend std::istream& read(std::istream&, Sales_data&);         //如左所示，在类内增加一条以friend关键字开始的函数声明语句
+	friend std::ostream& print(std::ostream&, Sales_data&);        //友元的声明仅仅是声明了指定的访问权限。如果希望用户可调用该友元函数，
+	                                                               //则需要在友元声明之外再对函数进行一次声明，
+
+public:                                                     //访问说明符
+	Sales_data(std::istream& is);                           //类内声明构造函数
+	Sales_data() = default;                                 //该构造函数不接受任何实参，为默认构造函数。
+	                                                        //如果我们需要默认的行为，可以在参数列表后面跟上 =default
+	Sales_data(const std::string& s):bookNo(s) {}           //该构造函数中未初始化的数据成员如unit_Sold等通过默认构造函数初始化
+	Sales_data(const std::string& s, unsigned n, double p)
+		:bookNo(s), unit_Sold(n), revenue(p* n) {}
+	                                                        //通过构造函数显示的初始化类内数据成员：bookNo,unit_Sold,revenue
+	                                                        //这两个构造函数的函数体都是空的，因为这些构造函数的唯一任务是给数据成员赋值。
+	string isbn()const { return bookNo; }                   //标记为const的成员函数不会改变类的数据成员，提高程序的可读性与可信性。
+	                                                        //函数块内容已完成，故而无需分号结尾
+	Sales_data& combine(const Sales_data&);                 //此处函数仅仅声明，未定义故而需要用分号隔开 
+//private:                                                  //如果此处使用private，则read/print/add函数无法正常编译，因为他们不是类的成员
+private:                                                    //此处可以添加关键词private，因为前面已经在类内将相应函数声明为友元。
+	double avg_price()const;                                //使用const的成员函数被称为常量成员函数
+	string bookNo;
+	unsigned unit_Sold = 0;
+	double revenue = 0.0;
+};
+
+//引入this：this实际上是成员函数的一个形参，在调用函数的时候将对象的地址作为实参传递给this，
+// this的目标总是这个“对象”，故而this是一个常量指针。
+// 使用this可以将对象作为一个整体来访问，而非直接访问对象的某个成员
+// 本例子中，this类型为 Sales_data *const;
+//不过this的实参是隐式的，，并不出现在代码里，而是在编译阶段由编译器默默将其添加在参数列表里。
+
+//成员函数通过一个名为this的额外隐式参数来访问调用它的那个对象。
+//当我们调用一个成员函数的时候，用请求该函数的对象的地址来初始化this；
+//例如
+//    Sales_data total;
+//    total.isbn();
+//则编译器将total的地址传递给isbn的额外隐式形参this
+
+//std::string isbn() const { return this->bookNo; }
+
+double Sales_data::avg_price()const
+{
+	if (unit_Sold)
+		return revenue / unit_Sold;
+	else
+		return 0;
+}
+
+Sales_data& Sales_data::combine(const Sales_data& rhs)
+{
+	unit_Sold += rhs.unit_Sold;
+	revenue += rhs.revenue;
+	return *this;                                          //返回调用该函数的对象。该函数必须返回引用类型，
+}
+//combine函数：total.combine(trans);
+
+//定义类相关的非成员函数
+istream& read(istream& is, Sales_data& item)                //地址作为函数形参
+{
+	double price = 0;
+	is >> item.bookNo >> item.unit_Sold >> price;
+	item.revenue = price * item.unit_Sold;
+	return is;
+}
+ostream& print(ostream& os, Sales_data& item)
+{
+	os << item.isbn() << " " << item.unit_Sold << " " << item.revenue << " " << item.avg_price();
+	return os;
+}
+//读取与写入都会改变流的内容，故而接受的是普通引用。
+
+Sales_data add(const Sales_data& ab, const Sales_data& ac)
+{
+	Sales_data sum;
+	sum = ab;
+	sum.combine(ac);
+	return sum;
+}
+
+//构造函数没有返回类型，名字与类相同
+
+//每个类都定义了它的对象被初始化的方式，类通过一个我或几个成员函数来控制其对象的初始化过程，这些函数就是构造函数
+//构造函数的任务是初始化类对象的数据成员，无论何时只要类对象被创建，就会执行构造函数
+
+//编译器创建的构造函数被称为合成的默认构造函数
+//合成的默认构造函数只适用于非常简单的类
+
+//类外定义构造函数
+Sales_data::Sales_data(std::istream& is)
+{
+	read(is, *this);
+}
+
