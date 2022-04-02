@@ -1,0 +1,77 @@
+#include<iostream>
+#include<vector>
+#include<functional>
+#include<istream>
+#include<iterator> //该头文件中定义了插入、流、反向、移动迭代器。
+
+//插入器是一种迭代器适配器，它接受一个容器，生成一个迭代器，能实现向给定容器添加元素。
+//插入器有三种类型：back_inserter: 创建一个使用push_back的迭代器
+//                  front_inserter: 创建一个使用push_front的迭代器
+//                  inserter: 创建一个使用insert的迭代器
+//当调用inserter(c,iter); c为容器，iter为指向容器c内一个位置的迭代器。我们得到一个新的迭代器。
+//假如it为inserter生成的迭代器，*it=val;
+// 等价于 it=c.insert(it,val); 在it原指向的位置之前创建新元素val,返回指向val的迭代器。即it现在指向c内的val
+// ++it; 递增使得it仍指向原位置
+//
+
+bool isshorter(const std::string& s1, const std::string& s2)
+{
+	return s1.size() < s2.size();
+}
+
+//bind 标准库函数。可以看做是一个通用的函数适配器，接受一个可调用对象，生成一个新的可调用对象来适应原函数参数列表。
+// 
+// auto newCallable = bind( Callale, arg_list );
+// 
+//  arg_list是一个逗号分开的参数列表。
+// arg_list中可能包含形如 _n 的参数，n为一个整数，这表示一个占位符，表示newCallable的参数，他们占据了传递给newCallale
+// 的位置，n表示生成的可调用对象中的参数位置
+//bind函数将可调用对象与其参数一起绑定，成为一个仿函数。可以只绑定部分参数，改变可调用对象传入的参数，改变参数绑定顺序。
+//bind函数第一个参数是一个函数名，对于普通函数会隐式的转换为函数指针。
+
+//bind用来修正参数的值。例如函数f有5个参数，对bind调用的话有：auto g=bind(f,a,b,_2,c,_1); 生成一个新的调用对象g。
+//其中f的第1,2,4参数分别被绑定到a,b,c中，_2,_1分别表示两个占位符，传递给g的参数按照占位符传递给f。
+//即g(X,Y)映射为f(a,b,Y,c,X);
+
+//
+
+bool check_size(const std::string& s, std::string::size_type sz)
+{
+	return s.size() > sz;
+}
+
+int main()
+{
+	auto check6 = bind(check_size, std::placeholders::_1, 6);  //此bind调用只有一个占位符 ‘_1' 。占位符出现在placeholder命名空间中
+	//表示check6只接受单一参数。
+	//占位符出现在arg_list的第一个位置，表示check6的此参数对应check_size的第一个参数。
+	//此参数是一个 const string&，因此在调用check6的时候必须向其传递一个string类型的参数，
+	// check6会将此参数传递给check_size。
+	std::string s{ "huidang" };
+	bool b1 = check6(s);//check6(s)会调用check_size(s,6);显然s.size()>6，所以b1=true。
+
+	//引入find_if函数，find_if(a,b,weici)；a,b是表示一个范围的迭代器，find_if第三个参数为一个谓词
+	//find_if找到a,b范围内的第一个元素使得谓词返回非零，find_if最终返回指向该元素的一个迭代器。
+
+	std::vector<std::string> words{ "hui","dang","lin","jueding","wu","di","yi","zhans","qing","yun","zhi","lin","wu","di" };
+	//auto wc = find_if(words.begin(), words.end(), [sz](const std::string& a) {return a.size() > sz});
+	//auto wc = find_if(words.begin(), words.end(), bind(check_size,std::placeholders::_1,sz));
+	//此例中bind 调用一个可调用对象check_size，同时将check_size所需要的第二个参数绑定在sz上（sz是一个已经被定义和初始化的string::size_type）
+	//find_if是一个将words的所有元素调用，将其代入谓词bind,bind通过 _1 占位符，将每words中的元素按调入check_size中。
+	//
+
+	std::istream_iterator<int> in_iter(std::cin);   //从cin中读取int
+	std::istream_iterator<int> efo;                 //istream尾后迭代器，efo指向istream流尾后
+	std::vector<int> vec;
+	while (in_iter != efo)
+	{
+		vec.push_back(*in_iter++);                  //后置递增将原始值的副本作为右值返回（即尚未加1或减1）。
+	}                                               //前置版本返回一个指向递增后迭代器的引用，后置版本返回旧值。
+
+	std::ostream_iterator<int> out_iter(std::cout, " ");//将类型为int的值输出在cout流中，每个值后面输出一个空格
+	for (auto e : vec)
+		*out_iter++ = e;             //通过赋值语句将e写到cout(此处’=‘）
+	std::cout << std::endl;
+	copy(vec.begin(), vec.end(), out_iter);  //此处调用copy算法。
+}
+
