@@ -1,0 +1,47 @@
+#include<iostream>
+#include<istream>
+#include<vector>
+#include<algorithm>
+
+//反向迭代器：rbegin,rend,crbegin,crend.这些成员函数返回指向容器尾元素和首元素之前位置的迭代器
+//
+
+//泛型算法结构
+// 算法形参模式
+// 
+// alg(beg,end,other args);
+// alg(beg,end,dest,other args);
+// alg(beg,end,beg2,other args);
+// alg(beg,end,beg2,end2,other args);
+// 
+// alg为算法名字
+//
+int main()
+{
+	/*std::vector<std::string> vec{"yang","yin","wu","di"};
+	std::ostream_iterator<std::string> out_iter(std::cout, " ");//out_iter为一个ostream迭代器，绑定在cout流上。
+	//之后会将string类型的元素输出,每个元素输出之后紧跟着一个空格" "；
+	for (auto e : vec)
+	{
+		*out_iter++ = e;  
+	}
+	std::cout << std::endl;
+
+	std::vector<int> intvec{ 1, 2, 3, 4, 5, 6, 7 };
+	for (auto r_iter = intvec.crbegin(); r_iter != intvec.crend(); ++r_iter)//反向迭代器，递增向前正向迭代器的递减
+	{
+		std::cout << *r_iter << " ";
+	}
+	sort(intvec.begin(), intvec.end());//intvec正向排序
+	sort(intvec.rbegin(), intvec.rend()); //逆序排序，最小元素在intvec末尾
+	*/
+	std::string line{ "first,middle,last" };  //构造一个string
+	auto rcomma = find(line.crbegin(), line.crend(), ',');   //rcomma指向反向搜索中line的第一个逗号，若没有逗号则指向crend();
+	std::cout << std::string(line.crbegin(), rcomma) << std::endl;//打印tsal，但并不会打印‘，’；反映了左闭合区间的特性（反向）
+
+	//可以调用反向迭代器reverse_iterator中的base成员函数将反向迭代器转化为其对应的普通迭代器
+
+	std::cout << std::string(rcomma.base(), line.cend()) << std::endl; //输出last
+	//rcomma与rcomma.base()指向不同的元素。rcomma.base()指向rcomma所指向的逗号的前一个元素
+
+}
