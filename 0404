@@ -1,0 +1,77 @@
+#include<iostream>
+#include<vector>
+#include<istream>
+#include<map>
+#include<set>
+#include<utility> //该头文件中包含pair标准库类型
+
+//关联容器中元素是根据关键字存储的,所以关联容器是不支持顺序容器位置相关操作的，例如push_back,push_front
+
+//定义以一个map时，要指明关键字类型和值类型。而定义一个set的时候，只需要指明关键字类型
+
+std::pair<std::string, size_t> word_count { "yin", 6 };   //pair类型定义
+
+std::pair<std::string, int> process(std::vector<std::string>& v)  //以一个string类型的vector作为函数形参
+{
+	if (!v.empty())
+	{
+		//return { v.back(),v.back().size() };      //直接使用{}来列表初始化返回的pair对象。 
+		return make_pair(v.back(), v.back().size());//用make_pair来生成pair对象返回
+	}
+	else return std::pair<std::string, int>();
+}
+
+std::set<std::string>::value_type v1; //v1是一个string类型
+std::set<std::string>::key_type v2; //v2是一个string类型    key_type至容器中关键字的类型
+std::map<std::string, size_t>::key_type v3; //v3是一个string类型
+std::map<std::string, size_t>::mapped_type v4; //v4是一个size_t;mapped_type表示每个关键字关联的值得类型，只适用于map
+std::map<std::string, size_t>::value_type v5;//v5是一个pair<std::string,size_t>,对于map而言value_type是一个pair<const key_type,mapped_type>
+
+std::map<std::string, std::string> buildMap(std::ifstream& map_file)
+{
+
+}
+void word_transform(std::ifstream& map_file, std::ifstream& input)
+{
+	auto trans_map = buildMap(map_file);
+}
+
+int main()
+{
+	std::map<std::string, size_t> word_count;
+	std::set<std::string> exclude{ "the","and","a","an" };
+	//authors将姓映射为名
+	std::map<std::string, std::string> authors{ {"yang","weiyi"},{"zhang","yunbo"},{"qiang","zhenghui"} };
+	std::vector<int> vec;
+	for (std::vector<int>::size_type i = 0; i != 10; ++i)
+	{
+		vec.push_back(i);
+		vec.push_back(i); //将0到9存储在vec容器里面，每个数存储两次
+	}
+	/*std::set<int> iset(vec.begin(), vec.end());           //用vec中的不重复元素初始化iset
+	std::multiset<int> miset(vec.begin(), vec.end());     //miset中包含vec中的所有元素
+	std::cout << vec.size() << std::endl;
+	std::cout << iset.size() << std::endl;
+	std::cout << miset.size() << std::endl;*/
+	std::string word;
+	while (std::cin >> word)
+	{
+		auto ret = word_count.insert({ word,1 });//通过insert将该pair类型“{word,1}”插入到word_count中，如果word已存在，则什么也不干
+		//insert返回一个pair类型，它的first成员是一个迭代器，指向具有给定关键字的元素，本例子中指向word
+		//second成员是一个bool值，表示插入成功还是已经在容器里面了，如果关键字已经在容器里面了，insert什么也不做，
+		//且其second成员是false,关键词不存在原有map里面的时候则会成功插入，返回的pair的second成员为true.
+		if (!ret.second)
+		{
+			++ret.first->second;//返回的pair类型是first成员是一个迭代器，指向特定元素，map中元素类型为pair
+		}
+	}
+	/*auto map_it = word_count.begin();//map_it是一个指向word_count中第一个元素的迭代器
+	                                 //*map_it是一个指向pair<const string,size_t>对象的引用
+	std::cout << map_it->first << std::endl;  //引用调用成员时可用符号“->”。
+	std::cout << map_it->second;
+	//map_it->first="wusi"; 这个语句错误，因为关键词时const的
+	++map_it->second;  //正确，关键词关联的值我们可以通过迭代器改变。*/
+
+
+}
+
